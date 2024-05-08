@@ -1,0 +1,4 @@
+AuthType Basic
+AuthName "Protected Site"
+AuthUserFile /certis/3/ioannis.siglidis/.htpasswd
+require valid-user

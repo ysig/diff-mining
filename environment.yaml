@@ -1,0 +1,23 @@
+name: diff-mining
+channels:
+  - xformers
+  - pytorch
+  - nvidia
+  - defaults
+dependencies:
+  - python=3.10
+  - pytorch=2.1.1
+  - torchvision=0.16.1
+  - pytorch-cuda=11.8
+  - xformers=0.0.23
+  - pip:
+      - accelerate==0.25.0
+      - diffusers==0.24.0
+      - einops==0.7.0
+      - opencv-python==4.8.1.78
+      - scikit-learn==1.4.2
+      - scipy==1.11.4
+      - tokenizers==0.15.0
+      - tqdm==4.66.1
+      - transformers==4.36.0
+      - umap-learn==0.5.6

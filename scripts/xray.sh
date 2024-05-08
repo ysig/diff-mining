@@ -1,0 +1,2 @@
+python diffmining/applications/xray/finetune.py --data_path dataset/CXR8/ --train_batch_size 8 --output_dir models/xray --num_train_epochs 100
+python diffmining/applications/xray/compute.py -t results/xray -m models/xray -i dataset/CXR8
