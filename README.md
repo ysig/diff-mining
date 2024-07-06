@@ -3,7 +3,7 @@
 
 Official PyTorch implementation of [Diffusion Models as Data Mining Tools](https://imagine.enpc.fr/~ioannis.siglidis/diff-mining).  
 
-**Authors**: [Ioannis Siglidis<sup>1</sup>](https://imagine.enpc.fr/~siglidii/), [Aleksander&nbspHołyński<sup>2</sup>](https://holynski.org/), [Alexei A. Efros<sup>2</sup>](https://people.eecs.berkeley.edu/~efros/), [Mathieu Aubry<sup>1</sup>](https://imagine.enpc.fr/~aubrym/), [Shiry Ginosar<sup>2</sup>](https://people.eecs.berkeley.edu/~shiry/)
+**Authors**: [Ioannis Siglidis<sup>1</sup>](https://imagine.enpc.fr/~siglidii/), [Aleksander Hołyński<sup>2</sup>](https://holynski.org/), [Alexei A. Efros<sup>2</sup>](https://people.eecs.berkeley.edu/~efros/), [Mathieu Aubry<sup>1</sup>](https://imagine.enpc.fr/~aubrym/), [Shiry Ginosar<sup>2</sup>](https://people.eecs.berkeley.edu/~shiry/)
 
 1. _LIGM, Ecole des Ponts, Univ Gustave Eiffel, CNRS, Marne-la-Vallée, France_  
 2. _University of California, Berkeley_
