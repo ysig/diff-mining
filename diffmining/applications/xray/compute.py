@@ -115,7 +115,7 @@ class D(object):
     return x
 
   @torch.no_grad()
-  def compute_losses(self, img, country_embeds, B=100):
+  def compute_losses(self, img, country_embeds, B=10):
     with torch.inference_mode():
       x = self.sd.encode_vae(self.load_image(img))
 
@@ -208,12 +208,13 @@ class Typicallity(object):
     return (self.gblur(dm[:, -1].unsqueeze(1)) - self.gblur(dm[:, i].unsqueeze(1))).squeeze(1).mean(axis=0).cpu().numpy()
 
   @torch.no_grad()
-  def compute(self, dm, size):
+  def compute(self, dm, size, blur=False):
     dm = dm.float()
     dm = dm.mean(dim=2)
     dm = interpolate(dm, size, mode="bilinear")
     dm_pixel = (dm[:, -1] - dm[:, 0]).mean(dim=0).cpu().numpy()
-    dm = self.blur(dm, 0)
+    if blur:
+      dm = self.blur(dm, 0)
     return dm, dm_pixel
 
   def predict_bboxes(self, dm, k_per_image=5, ascending=True):
@@ -284,20 +285,39 @@ class Typicallity(object):
 
   def main(self, num_per_disease=10):
     report, auc = {}, {}
+    total = sum(1 for disease in self.diseases for _ in self.parent[disease])
+    idx = 0
+    pbar = tqdm(total=total)
     for disease in self.diseases:
       report[disease], auc[disease] = {}, {}
-      for fpath, bbox in self.parent[disease][:num_per_disease]:
-        os.makedirs(join(self.output_path, disease), exist_ok=True)
-        loss, pil = self.D[disease].compute(disease, fpath)
-        loss, loss_pixel = self.compute(loss, pil.size)
+      os.makedirs(join(self.output_path, disease, 'typicality'), exist_ok=True)
+      for fpath, bbox in self.parent[disease]:
+        name = os.path.split(fpath)[-1].replace('.jpg', '').replace('.png', '')
+        if os.path.isfile(join(self.output_path, disease, 'typicality', f"{name}_loss_pixel.npy")):
+          loss_pixel = np.load(join(self.output_path, disease, 'typicality', f"{name}_loss_pixel.npy"))
+        else:
+          os.makedirs(join(self.output_path, disease), exist_ok=True)
+          loss, pil = self.D[disease].compute(disease, fpath)
+          loss, loss_pixel = self.compute(loss, pil.size)
+          
+          # Save loss and loss pixel to disk
+          # np.save(join(self.output_path, disease, 'typicality', f"{name}_loss.npy"), loss)
+          np.save(join(self.output_path, disease, 'typicality', f"{name}_loss_pixel.npy"), loss_pixel)
+        
         report[disease][os.path.split(fpath)[-1]] = float(self.mean_typicallity(bbox, loss_pixel))
-        auc[disease][os.path.split(fpath)[-1]] = float(self.aucpr(bbox, loss))
-        img = self.visualize_boxes(bbox, loss, pil)
+        auc[disease][os.path.split(fpath)[-1]] = float(self.aucpr(bbox, loss_pixel))
+        # img = self.visualize_boxes(bbox, loss, pil)
 
-        img = Image.fromarray(img)
-        img.save(join(self.output_path, disease, os.path.split(fpath)[1]))
+        # img = Image.fromarray(img)
+        # img.save(join(self.output_path, disease, os.path.split(fpath)[1]))
+        pbar.update(1)
+        # idx += 1
+        # if idx % 100 == 0:
+        #   # save file to self.output_path
+        #   with open(join(self.output_path, 'report.json'), 'w') as f:
+        #     json.dump(report, f, indent=4)
 
-      if len(report[disease]):
+      if not len(report[disease]):
         del report[disease]
         del auc[disease]
 
@@ -336,7 +356,26 @@ def compare_json_files(json_pt, json_ft):
 
   print('AUC\n----------')
   for k, vs in data_pt.items():
-    print(k, np.mean([max(data_ft[k][kp], 0.0000001)/max(data_pt[k][kp], 0.0000001) for kp, v in vs.items()]))
+    print('ft', k, np.mean([data_ft[k][kp] for kp, v in vs.items()]), '±', np.std([data_ft[k][kp] for kp, v in vs.items()]))
+    print('pt', k, np.mean([data_pt[k][kp] for kp, v in vs.items()]), '±', np.std([data_pt[k][kp] for kp, v in vs.items()]))
+    print(k, np.mean([data_ft[k][kp] - data_pt[k][kp] for kp, v in vs.items()]))
+
+
+  # Extract the values for the stripplot
+  df = []
+  for k, vs in data_pt.items():
+    df.extend([{'model': 'pt', 'disease': k, 'score': data_pt[k][kp]} for kp, v in vs.items()])
+    df.extend([{'model': 'ft', 'disease': k, 'score': data_ft[k][kp]} for kp, v in vs.items()])
+
+  import seaborn as sns
+  import pandas as pd
+  import matplotlib.pyplot as plt
+  df = pd.DataFrame(df)
+  sns.stripplot(x='disease', y='score', data=df, hue='model', jitter=0.2, dodge=True)
+  plt.xlabel('Model')
+  plt.ylabel('Value')
+  plt.title('Comparison of Values between pt and ft')
+  plt.savefig('comparison2.png')
 
   with open(join(json_pt, 'report.json'), 'r') as f:
     data_pt = json.load(f)
@@ -346,11 +385,14 @@ def compare_json_files(json_pt, json_ft):
 
   print('Typicality\n----------')
   for k, vs in data_pt.items():
-    print(k, np.mean([(data_ft[k][kp] - data_pt[k][kp])/np.abs(max(data_pt[k][kp], -0.000001)) for kp, v in vs.items()]))
+    print('ft', k, np.mean([data_ft[k][kp] for kp, v in vs.items()]), '±', np.std([data_ft[k][kp] for kp, v in vs.items()]))
+    print('pt', k, np.mean([data_pt[k][kp] for kp, v in vs.items()]), '±', np.std([data_pt[k][kp] for kp, v in vs.items()]))
       
 
 def merge_triplets(pt, ft, data_path, triplet_path):
   os.makedirs(triplet_path, exist_ok=True)
+  total = sum(1 for disease in os.listdir(pt) for image in os.listdir(join(pt, disease)))
+  pbar = tqdm(total=total)
   for disease in os.listdir(pt):
     os.makedirs(join(triplet_path, disease), exist_ok=True)
     if disease not in {'auc.json', 'report.json'}:
@@ -363,6 +405,7 @@ def merge_triplets(pt, ft, data_path, triplet_path):
         img.paste(img_pt.crop((512, 0, 1024, 512)), (0, img_pt.height))
         img.paste(img_ft.crop((512, 0, 1024, 512)), (0, img_pt.height*2))
         img.save(join(triplet_path, disease, image))
+        pbar.update(1)
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
@@ -378,4 +421,5 @@ if __name__ == "__main__":
       model_path = args.model_path.rstrip('/') + '-export'
 
   diseases = ['Atelectasis', 'Cardiomegaly', 'Effusion', 'Infiltrate', 'Mass', 'Nodule', 'Pneumonia', 'Pneumothorax']
-  typicallity = Typicallity(model_path, args.gt_path, args.output_path, diseases).main()
+  # typicallity = Typicallity(model_path, args.gt_path, args.output_path, diseases).main()
+  compare_json_files('/home/isig/diff-mining/results-fix-new/pt', '/home/isig/diff-mining/results-fix-new/ft')
