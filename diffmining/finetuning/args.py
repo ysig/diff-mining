@@ -13,7 +13,7 @@ def parser_base():
     parser.add_argument(
         "--base_name_or_path",
         type=str,
-        default='models/stable-diffusion-v1-5', # 'runwayml/stable-diffusion-v1-5', #'CompVis/ldm-text2im-large-256',
+        default='runwayml/stable-diffusion-v1-5',
         required=False,
         help="Path to pretrained model or model identifier from huggingface.co/models.",
     )

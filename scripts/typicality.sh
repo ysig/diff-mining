@@ -14,7 +14,7 @@ HTML_SCRIPT="diffmining/typicality/make-html.py"
 t_min="0.1"
 t_max="0.7"
 
-for mode in "ft" "pt"; do
+for mode in "pt"; do #"ft"
     TYPICALITY="${TYPICALITY_MAIN_PATH}/${mode}/${t_min}-${t_max}"
     CACHE_PATH="${CACHE_MAIN_PATH}/${mode}/${t_min}-${t_max}"
     SUBMISSION_PATH="${SUBMISSION_MAIN_PATH}/${mode}/${t_min}-${t_max}"
@@ -39,6 +39,12 @@ for mode in "ft" "pt"; do
             DATA_PATH="dataset/parallel-2"
             k=64
             ;;
+        places)
+            echo "Running 'places'"
+            MODEL_PATH="/home/isig/diff-geo-mining/sd-places/checkpoint-112716/"
+            DATA_PATH="/home/isig/diff-mining/places-val"
+            k=64
+            ;;
         *)
             echo "Invalid argument: $1. Please select 'ftt', 'cars', or 'geo'."
             GOOD="f"
@@ -50,12 +56,9 @@ for mode in "ft" "pt"; do
     fi
 
     if [ "${GOOD}" = "t" ]; then
-        conda activate max-torch
         python ${COMPUTE_SCRIPT_PATH} --typicality_path ${TYPICALITY} -i ${DATA_PATH} -m ${MODEL_PATH} --submission_path ${SUBMISSION_PATH} --make_submission --sub_split 1 --which $1 --t_min ${t_min} --t_max ${t_max}
-
-        conda activate diffusers
-        MAIN_COMMAND="python ${CLUSTER_SCRIPT_PATH} --which $1 --typicality_path ${TYPICALITY} --cache_path ${CACHE_PATH} --model_path ${MODEL_PATH} --k ${k} -d ${DATA_PATH}"
-        ${MAIN_COMMAND} --cluster --feature_which ${WHICH_FEATURE} --topk 
+        MAIN_COMMAND="python ${CLUSTER_SCRIPT_PATH} --which $1 --typicality_path ${TYPICALITY} --cache_path ${CACHE_PATH} --model_path ${MODEL_PATH} --k ${k} -d ${DATA_PATH} "
+        ${MAIN_COMMAND} --cluster --feature_which ${WHICH_FEATURE} --topk #--recache
 
         ${MAIN_COMMAND} --figure_path ${FIGURE_PATH} --feature_which ${WHICH_FEATURE} --figures_only --max_row 20 --top_k_figure 32 --min_row 6 --topk
         ${MAIN_COMMAND} --figure_path ${FIGURE_PATH} --feature_which ${WHICH_FEATURE} --figures_only --max_row 7 --top_k_figure 6 --min_row 6 --topk

@@ -1,10 +1,12 @@
 import os
 import sys
+import math
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
 import sys
 import json
 import PIL
+from PIL import Image
 import numpy as np
 import torch
 import argparse
@@ -40,6 +42,8 @@ class CategoryFeatures(object):
       txt = [(f"Portrait at the {c}'s." if len(c) else "Portrait.") for c in categories]
     elif self.which == 'cars':
       txt = [(f"A car at the {c}'s." if len(c) else "A car.") for c in categories]
+    elif self.which == 'places':
+      txt = [('Image of ' + c.replace('_', ' ') + '.'  if len(c) else "") for c in categories]
     else:
       txt = [(f"{c}" if len(c) else "") for c in categories]
 
@@ -53,7 +57,10 @@ class SD(object):
   def __init__(self, which, model_path, categories, device, xformers):
     self.which = which
     self.device = device
-    self.clip_name = ('geolocal/StreetCLIP' if which == 'geo' else 'openai/clip-vit-large-patch14-336')
+    self.clip_name = (
+      'geolocal/StreetCLIP' if (which == 'geo' and model_path not in {'runwayml/stable-diffusion-v1-5', 'CompVis/stable-diffusion-v1-4'})
+      else 'openai/clip-vit-large-patch14-336'
+    )
 
     self.model = StableDiffusionPipeline.from_pretrained(
       model_path,
@@ -125,7 +132,7 @@ class D(object):
     return x
 
   @torch.no_grad()
-  def compute_losses(self, img, country_embeds, B=100):
+  def compute_losses(self, img, country_embeds, B=10):
     with torch.inference_mode():
       x = self.sd.encode_vae(self.load_image(img))
 
@@ -165,6 +172,11 @@ class D(object):
         h = int(h * 256 / w)
         w = 256
       img = img.resize((w, h), PIL.Image.LANCZOS)
+    elif self.which == 'places':
+      if img.width > img.height:
+          img = img.resize((math.ceil(img.width * (512 / img.height)), 512), Image.LANCZOS)
+      else:
+          img = img.resize((512, math.ceil(img.height * (512 / img.width))), Image.LANCZOS)
     return img
 
   def compute(self, country, path):
@@ -198,7 +210,7 @@ def get_country(path):
 class Typicality(object):
   def __init__(self, which, model_path, dataset_path, typicality_path, t_min=0.0, t_max=1.0, xformers=True):
     self.which = which
-    self.load_paths = (self.load_paths_geo if which == 'geo' else self.load_paths_ftt if which == 'ftt' else self.load_paths_cars)
+    self.load_paths = (self.load_paths_geo if which == 'geo' else self.load_paths_ftt if which == 'ftt' else self.load_paths_cars if which == 'cars' else self.load_paths_places)
     self.load_paths(dataset_path)
     self.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
     if model_path is not None:
@@ -232,25 +244,40 @@ class Typicality(object):
         self.parallel[country].append(data)
 
   def load_paths_ftt(self, dataset_path):
-    self.parent = {}
     self.times = defaultdict(list)
     for t in os.listdir(dataset_path):
       for path in os.listdir(join(dataset_path, t)):
         self.times[t].append(join(dataset_path, t, path))
 
   def load_paths_cars(self, dataset_path):
-    self.parent = {}
     self.times = defaultdict(list)
     self.metadata = json.load(open(dataset_path + '.json', 'r'))
     path = os.path.split(dataset_path)[0]
     for image in os.listdir(join(dataset_path)):
         self.times[get_decade(self.metadata[image]['year'])].append(join(dataset_path, image))
 
+  def load_paths_places(self, dataset_path):
+    self.parent = defaultdict(list)
+    categories = {}
+    with open(join(dataset_path, 'categories_places365.txt'), 'r') as f:
+      for line in f.readlines():
+        path, category_id = line.strip().split(' ')
+        category = '_'.join(path.split('/')[2:])
+        categories[category_id] = category
+
+    print(dataset_path)
+    with open(join(dataset_path, 'places365_val.txt'), 'r') as f:
+      for line in f.readlines():
+        path, category_id = line.strip().split(' ')
+        self.parent[categories[category_id]].append(join(dataset_path, 'images', path))
+
   def categories(self):
     if self.which == 'geo':
       return self.parent.keys()
     elif self.which == 'ftt':
       return sorted(self.times.keys())
+    elif self.which == 'places':
+      return sorted(list(self.parent.keys()))
     else:
       return sorted(self.times.keys())
 
@@ -265,6 +292,8 @@ class Typicality(object):
   def get_seeds_(self, c):
     if self.which in {'ftt', 'cars'}:
       return [path for path in self.times[c]]
+    elif self.which == 'places':
+      return [path for path in self.parent[c]]
     elif self.which == 'geo':
       return [path[0] for path in self.country_path[c] if path[1]]
 
@@ -306,7 +335,6 @@ class Typicality(object):
 
     os.makedirs(submission_path, exist_ok=True)
     for i in range(sub_split):
-      print(join(submission_path, f'{i}.txt'))
       with open(join(submission_path, f'{i}.txt'), 'w') as f:
         for sub in subs[i::sub_split]:
           for path, country in sub:
@@ -315,7 +343,9 @@ class Typicality(object):
 def export_model(args):
   import subprocess
   PYTHON = sys.executable
-  train_path = ('finetuning/train-4.py' if args.which == 'geo' else ('finetuning/train-cars.py' if args.which == 'cars' else 'finetuning/train-ftt.py'))
+  parent_path = os.path.dirname(os.path.dirname(__file__))
+  map_which = {'geo': 'finetuning/geo.py', 'ftt': 'finetuning/ftt.py', 'cars': 'finetuning/cars.py', 'places': 'finetuning/places.py'}
+  train_path = join(parent_path, map_which[args.which])
   if not os.path.exists(args.model_path.rstrip('/') + '-export'):
     path, checkpoint = os.path.split(args.model_path)
     subprocess.call([
@@ -326,7 +356,7 @@ def export_model(args):
         '--output_dir', path,
         '--resume_from_checkpoint', checkpoint,
         '--export-only',
-        '--export-dir', args.model_path + '-export',
+        '--export-dir', args.model_path.rstrip('/') + '-export',
       ], env=os.environ.copy()
     )
   return args.model_path.rstrip('/') + '-export'
@@ -338,7 +368,7 @@ if __name__ == "__main__":
   parser.add_argument('-t', '--target_path', required=False, default=None)
   parser.add_argument('-m', '--model_path', required=False, default=None)
   parser.add_argument('-c', '--typicality_path', required=True)
-  parser.add_argument('--which', type=str, required=True, choices=['geo', 'ftt', 'cars'])
+  parser.add_argument('--which', type=str, required=True, choices=['geo', 'ftt', 'cars', 'places'])
   parser.add_argument('--make_submission', action='store_true')
 
   parser.add_argument('--sub_split', type=int, default=1)

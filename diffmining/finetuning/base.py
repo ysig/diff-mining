@@ -247,7 +247,7 @@ class BaseTrainer(object):
         self.accelerator.wait_for_everyone()
         if self.accelerator.is_main_process:
             pipeline = self.to_pipeline()
-            pipeline.save_pretrained(self.args.export_dir if self.args.export_dir is not None else join(self.args.output_dir, 'export'))
+            pipeline.save_pretrained(self.args.export_dir if self.args.export_dir is not None else self.args.output_dir.rstrip('/') + '-export')
 
             if self.args.push_to_hub:
                 upload_folder(

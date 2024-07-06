@@ -5,6 +5,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.
 import operator
 import random
 import copy
+import math
 import argparse
 import joblib
 import PIL
@@ -68,6 +69,8 @@ class Cluster(Typicality):
       return [path for path in self.times[tag] if d.exists(path)]
     elif self.which == 'geo':
       return [path[0] for path in self.country_path[tag] if path[1] and d.exists(path[0])]
+    elif self.which == 'places':
+      return [path for path in self.parent[tag] if d.exists(path)]
 
   def load_image(self, path, pil=True):
     img = PIL.Image.open(path).convert('RGB')
@@ -76,6 +79,11 @@ class Cluster(Typicality):
         img = img.resize((int(img.width * (256 / img.height)), 256), Image.LANCZOS)
       else:
         img = img.resize((256, int(img.height * (256 / img.width))), Image.LANCZOS)
+    elif self.which == 'places':
+      if img.width > img.height:
+          img = img.resize((math.ceil(img.width * (512 / img.height)), 512), Image.LANCZOS)
+      else:
+          img = img.resize((512, math.ceil(img.height * (512 / img.width))), Image.LANCZOS)
 
     if pil:
       return img
@@ -161,6 +169,15 @@ class Cluster(Typicality):
         h = int(h * 256 / w)
         w = 256
       pil = pil.resize((w, h), PIL.Image.LANCZOS)
+    elif self.which == 'places':
+      w, h = pil.size
+      if w > h:
+        w = int(w * 512 / h)
+        h = 512
+      else:
+        h = int(h * 512 / w)
+        w = 512
+      pil = pil.resize((w, h), PIL.Image.LANCZOS)
     return pil
 
   @torch.no_grad()
@@ -197,7 +214,7 @@ class Cluster(Typicality):
     topk, randomized = zip(*list(parallel))
     return pd.concat([df for df in topk], axis=0), pd.concat([df for df in randomized], axis=0)
 
-  def init__clip(self, clip_model="models/clip-vit-base-patch32"):
+  def init__clip(self, clip_model="openai/clip-vit-base-patch32"):
     if not hasattr(self, 'clip'):
       from transformers import CLIPProcessor, CLIPModel
       self.processor = CLIPProcessor.from_pretrained(clip_model)
@@ -217,7 +234,9 @@ class Cluster(Typicality):
     if self.which == 'cars':
       return f"Portrait at the {c}'s." if len(c) else "Portrait."
     elif self.which == 'faces':
-      return f"A car at the {c}'s."
+      return f"A car at the {c}'s." if len(c) else "A car."
+    elif self.which == 'places':
+      return ('Image of ' + c.replace('_', ' ') + '.'  if len(c) else "")
     else:
       return f"{c}" if len(c) else ""
 
@@ -318,9 +337,10 @@ class Cluster(Typicality):
     dfs, dfs_random = {}, {}
     cache_path = join(self.cache_path, 'clusters')
     for country in tqdm(self.categories(), desc='clustering [extracting D]'):
-      # caching - 
       fp = os.path.join(cache_path, country + '.pkl')
-      if not os.path.isfile(fp) or self.recache:
+      try:
+        joblib.load(fp)
+      except Exception:
         os.makedirs(cache_path, exist_ok=True)
         df, df_random = self.df_D(country, k_per_image=k_per_image, gt_only=only_gt)
         joblib.dump((df, df_random), fp)
@@ -336,7 +356,7 @@ class Cluster(Typicality):
       dfs_random[country] = get_top_k(df_random, key='D', k=k, randomize=True)
 
     if 'dift' in feature_which:
-      self.dift = SDFeaturizer(self.model_path, text_encoder_id=("geolocal/StreetCLIP" if self.which == 'geo' else "models/clip-vit-large-patch14-336"))
+      self.dift = SDFeaturizer(self.model_path, text_encoder_id=("geolocal/StreetCLIP" if self.which == 'geo' else "openai/clip-vit-large-patch14-336"))
 
     os.makedirs(join(self.cache_path, 'embeddings', feature_which), exist_ok=True)
     for randomize in [False] + ([True] if self.model_path in {'runwayml/stable-diffusion-v1-5', 'CompVis/stable-diffusion-v1-4'} else []):
@@ -365,11 +385,13 @@ class Cluster(Typicality):
     cache_path = join(self.cache_path, 'clusters')
     for country in tqdm(self.categories(), desc='clustering [extracting D]'):
       fp = os.path.join(cache_path, country + tag_gt + '_least.pkl')
-      if not os.path.isfile(fp):
+      try:
+        dfs[country], dfs_random[country] = joblib.load(fp)
+      except Exception as ex:
+        print(country, ex)
         os.makedirs(cache_path, exist_ok=True)
-        df, df_random = self.df_D(country, k_per_image=k_per_image, ascending=True, n_jobs=n_jobs, gt_only=True)
-        joblib.dump((df, df_random), fp)
-      dfs[country], dfs_random[country] = joblib.load(fp)
+        dfs[country], dfs_random[country] = self.df_D(country, k_per_image=k_per_image, ascending=True, n_jobs=n_jobs, gt_only=True)
+        joblib.dump((dfs[country], dfs_random[country]), fp)
 
     return dfs
 
@@ -545,7 +567,7 @@ if __name__ == "__main__":
   parser.add_argument('-c', '--cache_path', type=str, required=True)
   parser.add_argument('-t', '--typicality_path', type=str, required=True)
   parser.add_argument('-m', '--model_path', type=str, default=None)
-  parser.add_argument('-w', '--which', type=str, required=True, choices=['ftt', 'geo', 'cars'])
+  parser.add_argument('-w', '--which', type=str, required=True, choices=['ftt', 'geo', 'cars', 'places'])
 
   parser.add_argument('-s', '--seed', type=int, default=42)
   parser.add_argument('--recache', action='store_true')
