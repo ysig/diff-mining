@@ -22,7 +22,7 @@ conda create -f environment.yaml
 conda activate diff-mining
 ```
 
-### Data
+### Data 💽
 We apply our method in 5 different types of datasets: cars ([CarDB](https://pages.cs.wisc.edu/~yongjaelee/projects/lee_efros_hebert_bookchapter.pdf)), faces ([FTT](https://facesthroughtime.github.io/)), street-view images ([G^3](https://arxiv.org/abs/2211.15521)), scenes ([Places](http://places2.csail.mit.edu/download.html), high-res) and X-rays ([ChestX-ray](https://arxiv.org/abs/1705.02315)):
 
 - A properly extracted version of CarDB can be found [here]() and can be downloaded with:
@@ -33,7 +33,7 @@ source scripts/download-cardb.sh
 - G^3: unfortunately proprietary but information about PanoramaIDs can be found on the [original repo](https://github.com/g-luo/geolocation_via_guidebook_grounding).
 - Places: you can request access (trivial to get) from [original project page](https://forms.gle/w4VoNMED3hgb1m3AA).
 
-### Models
+### Models 🔬
 We share our models on huggingface which you can access through the handles:
 - [`diff-mining/cardb`](https://huggingface.co/diff-mining/cardb)
 - [`diff-mining/ftt`](https://huggingface.co/diff-mining/ftt)
@@ -46,18 +46,18 @@ or download them locally using:
 source scripts/download-models.sh
 ```
 
-## Approach
+## Approach 
 
 A full walkthrough of the pipeline can be seen in scripts: `scripts/training.sh` and `scripts/typicality.sh`.
 - Code for finetuning models can be found under: `diffmining/finetuning/`.
 - Code for computing typicality can be found at: `diffmining/typicality/compute.py`.
 - Code for averaging typicality across patches, computing DIFT features and clustering can be found at: `diffmining/typicality/cluster.py`
 
-### Applications
+### Applications🔸
 
 We test our typicality measure in two different approaches which we properly discuss in our paper.
 
-#### Clustering of Translated Visual Elements
+#### Clustering of Translated Visual Elements 
 Using our diffusion model, we can translate each image, e.g. in the case of geography, from one country to another.
 We use [PnP](https://arxiv.org/abs/2211.12572) which is the only method we found that was relatively robust in keeping a consistency between translated objects (i.e., windows would remain windows).
 You can launch this translation by running:
@@ -75,14 +75,14 @@ and then cluster them using:
 source scripts/parallel.sh cluster
 ```
 
-#### Emergent Disease Localization in X-rays
+#### Emergent Disease Localization in X-rays 🩻
 As typicality is connected to a binary classifier of the conditional vs the null conditioning, it can be used to "spatialize" information related to the condition on the input image.
 We test this on X-ray images and show how typicality is improved after finetuning. To reproduce our results and evaluations run:
 ```bash
 source scripts/xray.sh
 ```
 
-### Comparing with Doersch et al. 2012
+### Comparing with Doersch et al. 2012 🥐
 We provide a minimal optimized implementation of the algorithm of ["What makes Paris look like Paris?"](http://graphics.cs.cmu.edu/projects/whatMakesParis/) under `doersch/`.
 Running the code should only require:
 ```bash
@@ -101,6 +101,6 @@ yet you will probably have to adjust it to the dataset of choice.
   }
 ```
 
-### Acknowledgements
+### Acknowledgements 
 This work was partly supported by the European Research Council (ERC project DISCOVER, number 101076028) and leveraged the HPC resources of IDRIS under the allocation AD011012905R1, AD0110129052 made
 by GENCI. We would like to thank Grace Luo for data, code, and discussion; Loic Landreu and David Picard for insights on geographical representations and diffusion; Karl Doersch, for project advice and implementation insights; Sophia Koepke for feedback on our manuscript.
