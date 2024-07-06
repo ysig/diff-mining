@@ -29,18 +29,17 @@ We apply our method in 5 different types of datasets: cars ([CarDB](https://page
 ```bash
 source scripts/download-cardb.sh
 ```
-- FTT you can request access for downloading the dataset in the [original project page](https://facesthroughtime.github.io/).: 
-- G^3 is unfortunately proprietary but information about PanoramaIDs can be found on the [original repo](https://github.com/g-luo/geolocation_via_guidebook_grounding).
-- Places you can request access (trivial to get) from [original project page](https://forms.gle/w4VoNMED3hgb1m3AA).
-- 
+- FTT: you can request access for downloading the dataset in the [original project page](https://facesthroughtime.github.io/).: 
+- G^3: unfortunately proprietary but information about PanoramaIDs can be found on the [original repo](https://github.com/g-luo/geolocation_via_guidebook_grounding).
+- Places: you can request access (trivial to get) from [original project page](https://forms.gle/w4VoNMED3hgb1m3AA).
 
 ### Models
 We share our models on huggingface which you can access through the handles:
-- `diff-mining/cardb`
-- `diff-mining/ftt`
-- `diff-mining/g3`
-- `diff-mining/xray`
-- `diff-mining/places`
+- [`diff-mining/cardb`](https://huggingface.co/diff-mining/cardb)
+- [`diff-mining/ftt`](https://huggingface.co/diff-mining/ftt)
+- [`diff-mining/g3`](https://huggingface.co/diff-mining/g3)
+- [`diff-mining/xray`](https://huggingface.co/diff-mining/xray)
+- [`diff-mining/places`](https://huggingface.co/diff-mining/places)
 
 or download them locally using:
 ```bash
