@@ -1,12 +1,26 @@
+<div align="center">
+<h2>Diffusion Models as Data Mining Tools
+<p></p>
+<a href="https://imagine.enpc.fr/~siglidii/">Ioannis Siglidis</a>, <a href="https://holynski.org/">Aleksander Hołyński</a>,
+<a href="https://people.eecs.berkeley.edu/~efros/">Alexei A. Efros</a>, <br/>
+<a href="https://imagine.enpc.fr/~aubrym/">Mathieu Aubry</a>,
+<a href="https://people.eecs.berkeley.edu/~shiry/">Shiry Ginosar</a>
+
+<p></p>
+<a href="https://diff-mining.github.io/"><img 
+src="https://img.shields.io/badge/-Webpage-blue.svg?colorA=333&logo=html5" height=35em></a>
+<a href="https://arxiv.org/abs/2307.05473"><img 
+src="https://img.shields.io/badge/-Paper-blue.svg?colorA=333&logo=arxiv" height=35em></a>
+<a href="https://diff-mining.github.io/ref.bib"><img 
+src="https://img.shields.io/badge/-BibTeX-blue.svg?colorA=333&logo=latex" height=35em></a>
+<p></p>
+
 ![teaser.png](./.media/Teaser.png)
-# Diffusion Models as Data Mining Tools
 
-Official PyTorch implementation of [Diffusion Models as Data Mining Tools](https://imagine.enpc.fr/~ioannis.siglidis/diff-mining).  
+</h2>
+</div>
 
-**Authors**: [Ioannis Siglidis<sup>1</sup>](https://imagine.enpc.fr/~siglidii/), [Aleksander Hołyński<sup>2</sup>](https://holynski.org/), [Alexei A. Efros<sup>2</sup>](https://people.eecs.berkeley.edu/~efros/), [Mathieu Aubry<sup>1</sup>](https://imagine.enpc.fr/~aubrym/), [Shiry Ginosar<sup>2</sup>](https://people.eecs.berkeley.edu/~shiry/)
-
-1. _LIGM, Ecole des Ponts, Univ Gustave Eiffel, CNRS, Marne-la-Vallée, France_  
-2. _University of California, Berkeley_
+Official PyTorch implementation of [Diffusion Models as Data Mining Tools](https://imagine.enpc.fr/~ioannis.siglidis/diff-mining), which has been accepted in ECCV'24.
 
 ## Introduction 
 Our approach allows you to take a large labelled input dataset, and mine the patches that are important for each label.
@@ -93,11 +107,11 @@ yet you will probably have to adjust it to the dataset of choice.
 ### Citing 💫
 
 ```bibtex
-@article{diff-mining,
-    title = {},
-    author = {},
-    journal = {},
-    year = {},
+  @article{diff-mining,
+    title = {Diffusion Models as Data Mining Tools},
+    author = {Siglidis, Ioannis and Holynski, Aleksander and Efros, A. Alexei and Aubry, Mathieu and Ginosar, Shiry},
+    journal = {ECCV},
+    year = {2024},
   }
 ```
 
