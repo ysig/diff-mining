@@ -41,7 +41,7 @@ We apply our method in 5 different types of datasets: cars ([CarDB](https://page
 
 - A properly extracted version of CarDB can be found [here](https://huggingface.co/datasets/diff-mining/cardb) and can be downloaded with:
 ```bash
-source scripts/download-cardb.sh
+python scripts/download-cardb.py
 ```
 - FTT: you can request access for downloading the dataset in the [original project page](https://facesthroughtime.github.io/).: 
 - G^3: unfortunately proprietary but information about PanoramaIDs can be found on the [original repo](https://github.com/g-luo/geolocation_via_guidebook_grounding).
@@ -57,7 +57,7 @@ We share our models on huggingface which you can access through the handles:
 
 or download them locally using:
 ```bash
-source scripts/download-models.sh
+python scripts/download-models.py
 ```
 
 ## Approach 
