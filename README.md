@@ -39,7 +39,7 @@ conda activate diff-mining
 ### Data 💽
 We apply our method in 5 different types of datasets: cars ([CarDB](https://pages.cs.wisc.edu/~yongjaelee/projects/lee_efros_hebert_bookchapter.pdf)), faces ([FTT](https://facesthroughtime.github.io/)), street-view images ([G^3](https://arxiv.org/abs/2211.15521)), scenes ([Places](http://places2.csail.mit.edu/download.html), high-res) and X-rays ([ChestX-ray](https://arxiv.org/abs/1705.02315)):
 
-- A properly extracted version of CarDB can be found [here]() and can be downloaded with:
+- A properly extracted version of CarDB can be found [here](https://huggingface.co/datasets/diff-mining/cardb) and can be downloaded with:
 ```bash
 source scripts/download-cardb.sh
 ```
