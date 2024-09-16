@@ -32,7 +32,7 @@ It involves three steps:
 ### Installation 🌱
 Our codebase is mainly developed on [diffusers](https://github.com/huggingface/diffusers/) implementation of [LDMs](https://arxiv.org/abs/2112.10752).
 ```bash
-conda create -f environment.yaml
+conda env create -f environment.yaml
 conda activate diff-mining
 ```
 
