@@ -191,8 +191,8 @@ class Cluster(Typicality):
 
         # take the top-5
         kx, ky = self.kx, self.ky
-        df = [(path, i, j, i+kx, j+ky, dm[i, j], 'real') for i in range(dm.shape[0]) for j in range(dm.shape[1]) if i+kx < dm.shape[0] and j+ky < dm.shape[1]]
-
+        df = [(path, i, j, i+kx, j+ky, dm[i, j], 'real') for i in range(dm.shape[0]) for j in range(dm.shape[1])]
+        
         df_random = copy.deepcopy(df)
         random.shuffle(df_random)
         df_random = pd.DataFrame(df_random, columns=['seed', 'x_start', 'y_start', 'x_end', 'y_end', 'D', 'origin'])
