@@ -77,8 +77,6 @@ class CLIPRankCluster(object):
         scores = torch.nn.functional.interpolate(scores.permute(0, 3, 1, 2), size=input_size, mode="bilinear", align_corners=False)
         if self.mode == 'diff':
             scores = pool(scores[:, 0].unsqueeze(0), kx, ky).squeeze(0).squeeze(0) - pool(scores[:, 1].unsqueeze(0), kx, ky).squeeze(0).squeeze(0)
-        elif self.mode == 'softmax':
-            scores = pool(scores, kx, ky).softmax(dim=1)[:,0].squeeze(0)
         elif self.mode == 'sim':
             scores = pool(scores, kx, ky)[:,0].squeeze(0)
         else:
@@ -195,7 +193,7 @@ if __name__ == "__main__":
     args = argparse.ArgumentParser(description="Ranking")
     args.add_argument("--dataset", type=str, default='/home/isig/dataset/geo-base-data')
     args.add_argument("--cache", type=str, default='clip')
-    args.add_argument("--mode", type=str, default='diff', choices=['diff', 'softmax', 'sim'])
+    args.add_argument("--mode", type=str, default='diff', choices=['diff', 'sim'])
     args = args.parse_args()
     rank_cluster = CLIPRankCluster(dataset_path=args.dataset, cache_path=args.cache, mode=args.mode)
     rank_cluster.clustering(k_per_image=5, k=1000, num_clusters=32, hard_limit=6)
