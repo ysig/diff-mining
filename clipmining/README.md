@@ -3,10 +3,9 @@ This baseline is not documented on the main paper, due to space. It is construct
 It is exactly our algorithm from the main paper but adapted to CLIP.
 
 ## I. Ranking each patch
-To rank each patch we try [both ranking scores](https://github.com/ysig/diff-mining/blob/b5f82056aaa9fce5154fc2f118d9e58cf5e9dbcc/clipmining/ranking.py#L78-L81):
-
-a) **Difference**: `sim(patch, f"{country}") - sim(patch, f"") `.  
-b) **Similarity**: `sim(patch, f"{country}")`.
+To rank each patch we try both cosine similarity to the target label and normalize it through the null conditioning, constructing the following [ranking scores](https://github.com/ysig/diff-mining/blob/b5f82056aaa9fce5154fc2f118d9e58cf5e9dbcc/clipmining/ranking.py#L78-L81):
+a) **Similarity**: `sim(patch, f"{country}")`.
+b) **Difference**: `sim(patch, f"{country}") - sim(patch, f"") `.  
 
 ## II. Clustering 
 To extract features for clustering we simply [rescale and upscale token features and take their l2-normalized average](https://github.com/ysig/diff-mining/blob/22808cc6f9f1a773fe8c3ef9c27a9d3de2687430/clipmining/ranking.py#L99-L107), that corresponds to the input patch, similar to what we do for our dift features.
