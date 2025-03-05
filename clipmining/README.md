@@ -12,5 +12,5 @@ To extract features for clustering we simply [rescale and upscale token features
 
 ## Results
 Results for our 10 mined countries can be located [on our suppmat](https://diff-mining.github.io/supmat/clip.html).
-Although the speed of this algorithm is extremely fast: 30 minutes per country on vector parallelization of 32 cpus**(!)**, the results are unfortunately not that satisfying.
+Although the speed of this algorithm is extremely fast: 30 minutes per country on vector parallelization of 32 cpus **(!)**, the results are unfortunately not that satisfying.
 Note that, to the best of our knowledge, because of the [learned positional embedding of clip](https://github.com/huggingface/transformers/blob/6af0854efa3693e0b38c936707966685ec3d0ae8/src/transformers/models/clip/modeling_clip.py#L185) this method [can't be extended to arbitrary size images](https://discuss.huggingface.co/t/proper-way-to-handle-non-square-images-with-clip/32813).
