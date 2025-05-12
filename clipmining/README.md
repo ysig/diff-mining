@@ -1,5 +1,5 @@
 # CLIP Baseline
-This baseline is not documented on the main paper, due to space. It is constructed by taking CLIP (specifically StreetCLIP) and rescaling an input image to 334 x 334 (by center cropping) and then computing I) a ranking of each patch and II) clustering them top-1000 by features per position.
+This baseline is not documented on the main paper, due to space. It is constructed by taking CLIP (specifically StreetCLIP) and rescaling an input image to 336 x 336 (by center cropping) and then computing I) a ranking of each patch and II) clustering them top-1000 by features per position.
 It is exactly our algorithm from the main paper but adapted to CLIP.
 
 ## I. Ranking each patch
